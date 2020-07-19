@@ -1,0 +1,53 @@
+library(magrittr)
+library(plyr)
+library(dplyr)
+library(arules)
+install.packages(ggplot)
+library(ggplot2)
+bd=read.csv('/Users/hana/Documents/IST 707 Data Analytics/Week 3 - Assocication Rule Mining/bankdata.csv')
+str(bd)
+bd.data <- bd
+str(bd.data)
+bd$age <- cut(bd$age, breaks=c(0,10,20,30,40,50,60,Inf), labels=c('child','teens','twenties','thrities','forties','fifties','old'))
+min_income <- min(bd$income)
+max_income <- max(bd$income)
+bins = 3
+width= (max_income-min_income)/bins;
+#boxplot(b)
+bd$income = cut(bd$income, breaks=seq(min_income,max_income, width))
+bd$children=factor(bd$children)
+
+bd$married = dplyr::recode(bd$married, YES="married=YES",NO='married=NO')
+bd$car = dplyr::recode(bd$car, YES="car=YES",NO="car=NO")
+bd$save_act = dplyr::recode(bd$save_act, YES="save_act=YES",NO='save_act=NO')
+bd$current_act = dplyr::recode(bd$current_act, YES="current_act=YES",NO="currnet_act=NO")
+bd$mortgage = dplyr::recode(bd$mortgage,YES="mortgage=YES",NO="mortgage=NO")
+bd$pep = dplyr::recode(bd$pep, YES="pep=YES",NO="pep=NO")
+
+str(bd)
+bd.data <- bd
+str(bd.data)
+itemFrequencyPlot(bd.data,topN=20,type="absolute")
+rules = apriori(bd, parameter = list(supp= 0.001, conf=0.9,maxlen=3))
+options(digits=2)
+inspect(rules[1:5])
+bd <- bd %>%
+  select(-id) %>%
+  mutate_if(is.character, funs(as.factor)) %>%
+  mutate_if(is.numeric, funs(discretize))
+rules = apriori(bd, parameter = list(supp= 0.001, conf=0.9,maxlen=3))
+options(digits=2)
+inspect(rules[1:5])
+rules = apriori(bd, parameter = list(supp= 0.001, conf=0.8,maxlen=3))
+options(digits=2)
+inspect(rules[1:10])
+rules <- sort(rules, by='confidence', decreasing = TRUE)
+inspect(rules[1:5])
+rules <- apriori(data=bd, parameter=list(supp=0.001, conf=0.08), appearance=list(default='rhs',lhs='pep=pep=YES'),control=list(verbose=F))
+inspect(rules[1:5])
+rules <- apriori(data=bd, parameter=list(supp=0.001,conf=0.08, minlen=2),appearance=list(default='rhs',lhs='pep=pep=YES'), control=list(verbose=F))
+inspect(rules[1:5])
+rules <- apriori(data=bd, parameter=list(supp=0.001,conf=0.08, minlen=2),appearance=list(default='rhs',lhs="married=married=NO"), control=list(verbose=F))
+inspect(rules[1:5])
+rules <- apriori(data=bd, parameter=list(supp=0.001,conf=0.08, minlen=2),appearance=list(default='rhs',lhs='car=car=YES'), control=list(verbose=F))
+inspect(rules[1:5])
